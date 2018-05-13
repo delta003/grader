@@ -1,0 +1,11 @@
+apply plugin: 'java'
+apply plugin: 'com.palantir.baseline-checkstyle'
+apply plugin: 'com.palantir.baseline-idea'
+
+sourceCompatibility = '1.8'
+
+dependencies {
+    testCompile 'junit:junit'
+    testCompile 'org.assertj:assertj-core'
+    testCompile 'org.mockito:mockito-core'
+}
