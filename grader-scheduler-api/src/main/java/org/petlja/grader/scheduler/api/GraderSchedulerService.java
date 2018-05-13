@@ -4,5 +4,5 @@
 
 package org.petlja.grader.scheduler.api;
 
-public interface GraderScheduler {
+public interface GraderSchedulerService {
 }

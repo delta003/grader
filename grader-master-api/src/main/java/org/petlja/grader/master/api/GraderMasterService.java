@@ -4,5 +4,5 @@
 
 package org.petlja.grader.master.api;
 
-public interface GraderMaster {
+public interface GraderMasterService {
 }

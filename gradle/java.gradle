@@ -5,7 +5,9 @@ apply plugin: 'com.palantir.baseline-idea'
 sourceCompatibility = '1.8'
 
 dependencies {
-    testCompile 'junit:junit'
-    testCompile 'org.assertj:assertj-core'
-    testCompile 'org.mockito:mockito-core'
+    compile 'org.slf4j:slf4j-api:1.7.25'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:3.8.0'
+    testCompile 'org.mockito:mockito-core:2.15.0'
 }
