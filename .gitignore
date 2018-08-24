@@ -5,11 +5,28 @@
 /build/
 */build/
 
-# Idea
+# IntelliJ
 *.iml
 *.ipr
 *.iws
 .idea/
+out/
+
+# Eclipse
+*.class
+.project
+.gradle
+.classpath
+.checkstyle
+.settings
+.node
+*.launch
+/build/
+*/build/
+*/*/build/
+examples/*/build/
+extras/*/build/
+.factorypath
 
 Mac
 *.DS_Store
