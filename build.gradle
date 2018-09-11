@@ -13,6 +13,7 @@ buildscript {
         classpath 'com.google.guava:guava:21.0'
         classpath 'com.netflix.nebula:nebula-dependency-recommender:6.0.0'
         classpath 'com.palantir.baseline:gradle-baseline-java:0.20.1'
+        classpath 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin:0.3.0'
         classpath 'gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.10.1'
     }
 }
@@ -36,6 +37,9 @@ allprojects {
     group 'org.petlja.grader'
     version gitVersion()
 
+    apply plugin: 'idea'
+    apply plugin: 'nebula.dependency-recommender'
+
     repositories {
         mavenCentral()
         maven {
@@ -43,17 +47,24 @@ allprojects {
         }
     }
 
-    apply plugin: 'nebula.dependency-recommender'
+    apply plugin: 'com.palantir.configuration-resolver'
+
+    dependencyRecommendations {
+        strategy OverrideTransitives
+        propertiesFile file: rootProject.file('versions.props')
+    }
 
     configurations.all { conf ->
         resolutionStrategy {
             failOnVersionConflict()
         }
     }
-
-    dependencyRecommendations {
-        strategy OverrideTransitives
-        propertiesFile file: rootProject.file('versions.props')
-    }
 }
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.palantir.baseline-checkstyle'
+    apply plugin: 'com.palantir.baseline-idea'
+}
+
 
