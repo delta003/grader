@@ -8,6 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -17,10 +20,12 @@ public final class CppCompiler implements Compiler {
 
     private final File compileScript;
     private final File compilerLog;
+    private final ExecutorService executor;
 
     public CppCompiler() throws URISyntaxException {
         this.compileScript = new File(CppCompiler.class.getResource("/cpp/compile.sh").toURI());
         this.compilerLog = new File(CppCompiler.class.getResource("/cpp/compiler-log.txt").toURI());
+        this.executor = Executors.newSingleThreadExecutor();
     }
 
     @Override
@@ -37,18 +42,20 @@ public final class CppCompiler implements Compiler {
         logger.info(String.format("Executing command: %s", processBuilder.command()));
 
         Process process = processBuilder.start();
+
+        Instant startedInstant = Instant.now();
         boolean completedProcess = process.waitFor(COMPILE_TIME_LIMIT.toMillis(), TimeUnit.MILLISECONDS);
+        Instant completedInstant = Instant.now();
+
+        logger.info(String.format("Duration %s", Duration.between(startedInstant, completedInstant)));
 
         if (!completedProcess) {
             killProcess(process);
             return timeout();
         }
 
-        logger.info(String.valueOf(process.toHandle().pid()));
-
         boolean succeededProcess = process.exitValue() == 0;
-        // TODO(mbakovic): Fix time
-        Duration time = process.info().totalCpuDuration().orElse(Duration.ZERO);
+        Duration time = process.info().totalCpuDuration().orElse(Duration.between(startedInstant, completedInstant));
         killProcess(process);
 
         return succeededProcess

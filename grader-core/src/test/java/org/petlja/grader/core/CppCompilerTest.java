@@ -92,8 +92,6 @@ public final class CppCompilerTest {
         assertThat(errorContent).contains("4 errors generated.");
     }
 
-    // TODO(mbakovic): Fix me
-    @Ignore("Total CPU time does not work")
     @Test
     public void testCompileTime() throws IOException, InterruptedException {
         File out = folder.newFile();
