@@ -1,5 +1,9 @@
-apply from: "${rootDir}/gradle/java.gradle"
+plugins {
+    id "java"
+}
 
 dependencies {
-    compile project(':grader-scheduler-api')
+    testCompile 'junit:junit'
+    testCompile 'org.assertj:assertj-core'
+    testCompile 'org.mockito:mockito-core'
 }
