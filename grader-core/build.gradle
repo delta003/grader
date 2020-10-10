@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
+    compile 'org.apache.commons:commons-exec'
+
     testCompile 'junit:junit'
     testCompile 'org.assertj:assertj-core'
     testCompile 'org.mockito:mockito-core'
