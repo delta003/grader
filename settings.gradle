@@ -1,4 +1,3 @@
 rootProject.name = 'grader'
 
-include 'grader-master-api'
-include 'grader-scheduler'
+include 'grader-core'
