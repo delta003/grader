@@ -1,3 +1,4 @@
 rootProject.name = 'grader'
 
 include 'grader-core'
+include 'grader-docker'

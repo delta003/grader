@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -20,12 +18,10 @@ public final class CppCompiler implements Compiler {
 
     private final File compileScript;
     private final File compilerLog;
-    private final ExecutorService executor;
 
     public CppCompiler() throws URISyntaxException {
         this.compileScript = new File(CppCompiler.class.getResource("/cpp/compile.sh").toURI());
         this.compilerLog = new File(CppCompiler.class.getResource("/cpp/compiler-log.txt").toURI());
-        this.executor = Executors.newSingleThreadExecutor();
     }
 
     @Override
@@ -55,7 +51,8 @@ public final class CppCompiler implements Compiler {
         }
 
         boolean succeededProcess = process.exitValue() == 0;
-        Duration time = process.info().totalCpuDuration().orElse(Duration.between(startedInstant, completedInstant));
+        Duration time = process.info().totalCpuDuration()
+                .orElseGet(() -> Duration.between(startedInstant, completedInstant));
         killProcess(process);
 
         return succeededProcess

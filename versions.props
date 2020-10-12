@@ -1,4 +1,5 @@
 # Dependencies
+com.github.docker-java:* = 3.2.5
 org.apache.commons:commons-exec = 1.3
 
 # Test dependencies
