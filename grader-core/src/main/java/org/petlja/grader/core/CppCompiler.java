@@ -27,7 +27,7 @@ public final class CppCompiler implements Compiler {
     @Override
     public CompileResponse compile(CompileRequest request) throws InterruptedException, IOException {
         ProcessBuilder processBuilder = new ProcessBuilder(
-                "bash",
+                        "bash",
                         this.compileScript.toPath().toString(),
                         request.source().toString(),
                         request.out().toString(),

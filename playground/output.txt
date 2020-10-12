@@ -1,0 +1,1 @@
+./just-run.sh code.out test.txt test-out.txt  0.01s user 0.01s system 93% cpu 0.021 total
