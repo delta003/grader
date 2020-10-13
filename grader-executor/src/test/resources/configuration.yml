@@ -1,0 +1,4 @@
+tasks:
+  - commands: ['time', 'sleep', '10']
+  - commands: ['times']
+  - commands: ['ls', '-la']
