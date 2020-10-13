@@ -1,5 +1,9 @@
 # Grader
 
+## Executor
+
+Safely executes commands such as compile or run.
+
 ## Execution time and memory
 
 Requires gnu-time `brew install gnu-time`: `gtime --format="%S-%U-%e-%P-%M-%K" --output="output.txt" --append ./compiled-code.o`
