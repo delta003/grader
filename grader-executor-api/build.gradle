@@ -1,14 +1,14 @@
 apply plugin: "java"
+apply plugin: "com.palantir.conjure"
 
 dependencies {
-    compile project(':grader-executor-api')
-    compile project(':grader-executor-api:grader-executor-api-objects')
-
     compile 'com.google.guava:guava'
     compile 'com.fasterxml.jackson.core:jackson-databind'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
 
+    testCompile project(':grader-executor-api:grader-executor-api-objects')
     testCompile 'junit:junit'
     testCompile 'org.assertj:assertj-core'
     testCompile 'org.mockito:mockito-core'
 }
+

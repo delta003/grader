@@ -1,0 +1,25 @@
+types:
+  definitions:
+    default-package: org.petlja.grader.executor
+    objects:
+      ProcessCommand:
+        alias: string
+      ExecutorProcess:
+        fields:
+          commands: list<ProcessCommand>
+      ExecutorConfiguration:
+        fields:
+          processes: list<ExecutorProcess>
+    errors:
+      FailedToReadConfiguration:
+        namespace: Executor
+        code: INVALID_ARGUMENT
+      CommandMustNotBeEmpty:
+        namespace: Executor
+        code: INVALID_ARGUMENT
+      ProcessCommandsMustNotBeEmpty:
+        namespace: Executor
+        code: INVALID_ARGUMENT
+      ProcessExecutionFailed:
+        namespace: Executor
+        code: INTERNAL
