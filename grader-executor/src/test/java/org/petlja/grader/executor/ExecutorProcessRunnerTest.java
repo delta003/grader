@@ -20,12 +20,12 @@ public final class ExecutorProcessRunnerTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     private File logFile;
-    private ExecutorProcessRunner executorProcessRunner;
+    private Executor executorProcessRunner;
 
     @Before
     public void before() throws IOException {
         logFile = folder.newFile();
-        executorProcessRunner = new ExecutorProcessRunner(logFile);
+        executorProcessRunner = new Executor(logFile);
     }
 
     @Test

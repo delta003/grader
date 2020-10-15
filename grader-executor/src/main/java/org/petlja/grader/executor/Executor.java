@@ -12,15 +12,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public final class ExecutorProcessRunner {
+public final class Executor {
 
-    private static final Logger logger = Logger.getLogger(ExecutorProcessRunner.class.getName());
+    private static final Logger logger = Logger.getLogger(Executor.class.getName());
 
     private static final Duration PROCESS_TIME_LIMIT = Duration.ofSeconds(60);
 
     private final File executorOutputPath;
 
-    public ExecutorProcessRunner(File executorOutputPath) {
+    public Executor(File executorOutputPath) {
         this.executorOutputPath = executorOutputPath;
     }
 

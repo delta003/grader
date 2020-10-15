@@ -7,9 +7,9 @@ package org.petlja.grader.executor;
 import java.io.File;
 import java.io.IOException;
 
-public final class ExecutorMain {
+public final class Main {
 
-    private ExecutorMain() {}
+    private Main() {}
 
     private static void validateConfiguration(ExecutorConfiguration configuration) {
         for (ExecutorProcess process : configuration.getProcesses()) {
@@ -32,7 +32,7 @@ public final class ExecutorMain {
         validateConfiguration(configuration);
 
         // TODO(mbakovic): Support command timeout better
-        ExecutorProcessRunner processExecutor = new ExecutorProcessRunner(new File(Constants.EXECUTOR_OUTPUT_PATH));
+        Executor processExecutor = new Executor(new File(Constants.EXECUTOR_OUTPUT_PATH));
         for (ExecutorProcess process : configuration.getProcesses()) {
             try {
                 processExecutor.execute(process);

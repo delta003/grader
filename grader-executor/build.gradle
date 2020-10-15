@@ -1,4 +1,5 @@
-apply plugin: "java"
+apply plugin: "application"
+apply plugin: "com.palantir.docker"
 
 dependencies {
     compile project(':grader-executor-api')
@@ -11,4 +12,16 @@ dependencies {
     testCompile 'junit:junit'
     testCompile 'org.assertj:assertj-core'
     testCompile 'org.mockito:mockito-core'
+}
+
+application {
+    applicationName = 'grader-executor'
+    mainClass = 'org.petlja.grader.executor.Main'
+}
+
+docker {
+    name "${project.name}:${project.version}"
+    tag "DockerHub", "delta003/grader-executor::${project.version}"
+    files tasks.distTar.outputs
+    buildArgs([BUILD_VERSION: "${project.version}"])
 }
