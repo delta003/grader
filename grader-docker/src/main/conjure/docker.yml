@@ -1,0 +1,44 @@
+types:
+  definitions:
+    default-package: org.petlja.grader.docker
+    objects:
+      ContainerId:
+        alias: string
+      ImageId:
+        alias: string
+      VolumeId:
+        alias: string
+
+      Container:
+        fields:
+          id: ContainerId
+      Volume:
+        fields:
+          id: VolumeId
+          mountpoint: string
+
+      MountVolumeRequest:
+        fields:
+          volume: VolumeId
+          destination: string
+          ro: boolean
+      LaunchContainerRequest:
+        fields:
+          image: ImageId
+          volumes: set<MountVolumeRequest>
+      LaunchContainerResponse:
+        fields:
+          container: Container
+      DestroyContainerRequest:
+        fields:
+          container: ContainerId
+
+      CreateVolumeRequest:
+        fields:
+          volume: VolumeId
+      CreateVolumeResponse:
+        fields:
+          volume: Volume
+      DestroyVolumeRequest:
+        fields:
+          volume: VolumeId

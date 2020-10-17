@@ -1,6 +1,8 @@
 apply plugin: "java"
+apply plugin: "com.palantir.conjure"
 
 dependencies {
+    compile project(':grader-docker:grader-docker-objects')
     compile 'com.github.docker-java:docker-java-core'
     compile 'com.github.docker-java:docker-java-transport-httpclient5'
 
