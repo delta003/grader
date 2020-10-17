@@ -1,0 +1,23 @@
+types:
+  definitions:
+    default-package: org.petlja.grader.core
+    objects:
+      CompileRequest:
+        fields:
+          id: uuid
+          source: string
+      CompileResponse:
+        union:
+          succeeded: SucceededCompile
+          failed: FailedCompile
+          timeout: TimeoutCompile
+      SucceededCompile:
+        fields:
+          log: string
+          seconds: integer
+      FailedCompile:
+        fields:
+          log: string
+          seconds: integer
+      TimeoutCompile:
+        fields: {}

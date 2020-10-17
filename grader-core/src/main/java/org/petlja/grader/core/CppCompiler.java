@@ -4,66 +4,68 @@
 
 package org.petlja.grader.core;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import org.petlja.grader.docker.Container;
+import org.petlja.grader.docker.ContainerManager;
+import org.petlja.grader.docker.DestroyContainerRequest;
+import org.petlja.grader.docker.DestroyVolumeRequest;
+import org.petlja.grader.docker.LaunchContainerRequest;
+import org.petlja.grader.docker.MountVolumeRequest;
+import org.petlja.grader.docker.VolumeManager;
+import org.petlja.grader.executor.ExecutorConfiguration;
+import org.petlja.grader.executor.ExecutorProcess;
+import org.petlja.grader.executor.ProcessCommand;
 
 public final class CppCompiler implements Compiler {
 
     private static final Logger logger = Logger.getLogger(CppCompiler.class.getName());
 
-    private final File compileScript;
-    private final File compilerLog;
+    private static final ExecutorConfiguration EXECUTOR_CONFIGURATION = ExecutorConfiguration.builder()
+            .processes(ExecutorProcess.builder()
+                    .commands(ProcessCommand.of("bash"))
+                    .commands(ProcessCommand.of("/app/compiler/cpp.sh"))
+                    .commands(ProcessCommand.of("/app/executor/source"))
+                    .commands(ProcessCommand.of("/app/executor/output"))
+                    .commands(ProcessCommand.of("/app/executor/error"))
+                    .commands(ProcessCommand.of("/app/executor/time"))
+                    .build())
+            .build();
 
-    public CppCompiler() throws URISyntaxException {
-        this.compileScript = new File(CppCompiler.class.getResource("/cpp/compile.sh").toURI());
-        this.compilerLog = new File(CppCompiler.class.getResource("/cpp/compiler-log.txt").toURI());
+    private final VolumeManager volumeManager;
+    private final ContainerManager containerManager;
+
+    public CppCompiler(VolumeManager volumeManager, ContainerManager containerManager) {
+        this.volumeManager = volumeManager;
+        this.containerManager = containerManager;
     }
 
     @Override
-    public CompileResponse compile(CompileRequest request) throws InterruptedException, IOException {
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                        "bash",
-                        this.compileScript.toPath().toString(),
-                        request.source().toString(),
-                        request.out().toString(),
-                        request.error().toString())
-                .redirectOutput(ProcessBuilder.Redirect.appendTo(this.compilerLog))
-                .redirectError(ProcessBuilder.Redirect.appendTo(this.compilerLog));
-
-        logger.info(String.format("Executing command: %s", processBuilder.command()));
-
-        Process process = processBuilder.start();
-
-        Instant startedInstant = Instant.now();
-        boolean completedProcess = process.waitFor(COMPILE_TIME_LIMIT.toMillis(), TimeUnit.MILLISECONDS);
-        Instant completedInstant = Instant.now();
-
-        logger.info(String.format("Duration %s", Duration.between(startedInstant, completedInstant)));
-
-        if (!completedProcess) {
-            killProcess(process);
-            return timeout();
-        }
-
-        boolean succeededProcess = process.exitValue() == 0;
-        Duration time = process.info().totalCpuDuration()
-                .orElseGet(() -> Duration.between(startedInstant, completedInstant));
-        killProcess(process);
-
-        return succeededProcess
-                ? succeeded(time)
-                : failed(time);
+    public CompileResponse compile(CompileRequest request) {
+        CompilerVolume compilerVolume = CompilerVolume.create(volumeManager);
+        UserCodeVolume userCodeVolume = new UserCodeVolume(
+                volumeManager, request.getId(), request.getSource(), EXECUTOR_CONFIGURATION);
+        Container executor = containerManager.launch(
+                LaunchContainerRequest.builder()
+                        .image(EXECUTOR_IMAGE_ID)
+                        .volumes(MountVolumeRequest.builder()
+                                .volume(compilerVolume.get().getId())
+                                .destination("/app/compiler")
+                                .ro(true)
+                                .build())
+                        .volumes(MountVolumeRequest.builder()
+                                .volume(userCodeVolume.get().getId())
+                                .destination("/app/executor")
+                                .ro(false)
+                                .build())
+                        .build()).getContainer();
+        CompileResponse response = parseExecutor(userCodeVolume);
+        containerManager.destroy(DestroyContainerRequest.builder().container(executor.getId()).build());
+        volumeManager.destroy(DestroyVolumeRequest.builder().volume(userCodeVolume.get().getId()).build());
+        return response;
     }
 
-    private void killProcess(Process process) {
-        process.destroy();
-        if (process.isAlive()) {
-            process.destroyForcibly();
-        }
+    private CompileResponse parseExecutor(UserCodeVolume userCodeVolume) {
+        // TODO(mbakovic): get output error and time
+        return null;
     }
 }
