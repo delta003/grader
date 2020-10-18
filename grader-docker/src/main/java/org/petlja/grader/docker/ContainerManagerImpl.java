@@ -11,7 +11,6 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Volume;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -29,21 +28,13 @@ public final class ContainerManagerImpl implements ContainerManager {
     @Override
     public LaunchContainerResponse launch(LaunchContainerRequest request) {
         CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(request.getImage().get());
-        if (!request.getVolumes().isEmpty()) {
-            List<Bind> binds = new ArrayList<>();
-            createContainerCmd.withVolumes(
-                    request.getVolumes().stream()
-                            .map(volume -> {
-                                Volume dockerVolume = new Volume(volume.getDestination());
-                                binds.add(new Bind(
-                                        volume.getVolume().get(),
-                                        dockerVolume,
-                                        volume.getRo() ? AccessMode.ro : AccessMode.rw));
-                                return dockerVolume;
-                            })
-                            .collect(Collectors.toList()));
-            createContainerCmd.withHostConfig(HostConfig.newHostConfig().withBinds(binds));
-        }
+        List<Bind> binds = request.getBinds().stream()
+                .map(bindRequest -> new Bind(
+                        bindRequest.getPath(),
+                        new Volume(bindRequest.getDestination()),
+                        bindRequest.getRo() ? AccessMode.ro : AccessMode.rw))
+                .collect(Collectors.toList());
+        createContainerCmd.withHostConfig(HostConfig.newHostConfig().withBinds(binds));
         CreateContainerResponse createContainerResponse = createContainerCmd.exec();
         dockerClient.startContainerCmd(createContainerResponse.getId()).exec();
         logger.info(String.format("Started container %s",

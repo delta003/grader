@@ -17,15 +17,15 @@ types:
           id: VolumeId
           mountpoint: string
 
-      MountVolumeRequest:
+      BindRequest:
         fields:
-          volume: VolumeId
+          path: string
           destination: string
           ro: boolean
       LaunchContainerRequest:
         fields:
           image: ImageId
-          volumes: set<MountVolumeRequest>
+          binds: set<BindRequest>
       LaunchContainerResponse:
         fields:
           container: Container

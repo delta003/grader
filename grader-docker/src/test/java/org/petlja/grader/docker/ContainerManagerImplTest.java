@@ -5,30 +5,30 @@
 package org.petlja.grader.docker;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.exception.ConflictException;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public final class ContainerManagerImplTest {
     // docker/getting-started
     private static final ImageId IMAGE_ID = ImageId.of("1f32459ef038");
-    private static final VolumeId VOLUME_ID_1 = VolumeId.of("test-volume-1");
-    private static final VolumeId VOLUME_ID_2 = VolumeId.of("test-volume-2");
 
     private DockerClient dockerClient;
     private ContainerManager containerManager;
-    private VolumeManager volumeManager;
+
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     @Before
     public void before() {
         this.dockerClient = DockerClientFactory.create();
         this.containerManager = new ContainerManagerImpl(dockerClient);
-        this.volumeManager = new VolumeManagerImpl(dockerClient);
     }
 
     @Test
@@ -47,21 +47,18 @@ public final class ContainerManagerImplTest {
     }
 
     @Test
-    public void testVolumes() {
-        Volume volume1 = volumeManager.create(CreateVolumeRequest.builder().volume(VOLUME_ID_1).build()).getVolume();
-        Volume volume2 = volumeManager.create(CreateVolumeRequest.builder().volume(VOLUME_ID_2).build()).getVolume();
-
+    public void testBinds() throws IOException {
         LaunchContainerResponse containerResponse =
                 containerManager.launch(LaunchContainerRequest.builder()
                         .image(IMAGE_ID)
-                        .volumes(MountVolumeRequest.builder()
+                        .binds(BindRequest.builder()
+                                .path(folder.newFolder().toPath().toString())
                                 .destination("/app/input")
-                                .volume(volume1.getId())
                                 .ro(true)
                                 .build())
-                        .volumes(MountVolumeRequest.builder()
+                        .binds(BindRequest.builder()
+                                .path(folder.newFolder().toPath().toString())
                                 .destination("/app/output")
-                                .volume(volume2.getId())
                                 .ro(false)
                                 .build())
                         .build());
@@ -76,14 +73,7 @@ public final class ContainerManagerImplTest {
                 .anyMatch(mount -> mount.getDestination().getPath().equals("/app/output") && mount.getRW()))
                 .isTrue();
 
-        assertThatExceptionOfType(ConflictException.class)
-                .isThrownBy(() -> volumeManager.destroy(DestroyVolumeRequest.builder().volume(volume1.getId()).build()))
-                .withMessageContaining("volume is in use");
-
         containerManager.destroy(DestroyContainerRequest.builder()
                 .container(containerResponse.getContainer().getId()).build());
-
-        volumeManager.destroy(DestroyVolumeRequest.builder().volume(volume1.getId()).build());
-        volumeManager.destroy(DestroyVolumeRequest.builder().volume(volume2.getId()).build());
     }
 }

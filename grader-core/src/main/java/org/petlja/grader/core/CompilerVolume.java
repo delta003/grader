@@ -6,48 +6,42 @@ package org.petlja.grader.core;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.function.Supplier;
 import org.apache.commons.io.FileUtils;
-import org.petlja.grader.docker.CreateVolumeRequest;
-import org.petlja.grader.docker.Volume;
-import org.petlja.grader.docker.VolumeId;
-import org.petlja.grader.docker.VolumeManager;
+import org.petlja.grader.docker.BindRequest;
 
-public final class CompilerVolume implements Supplier<Volume> {
+public final class CompilerVolume implements Supplier<BindRequest> {
 
-    private static final VolumeId COMPILER_VOLUME = VolumeId.of("compiler");
-
-    private final Volume volume;
+    private final BindRequest bindRequest;
 
     private static CompilerVolume instance = null;
 
-    public static CompilerVolume create(VolumeManager volumeManager) {
+    public static CompilerVolume create() {
         if (instance == null) {
-            instance = new CompilerVolume(volumeManager);
+            instance = new CompilerVolume();
         }
         return instance;
     }
 
-    private CompilerVolume(VolumeManager volumeManager) {
-        this.volume = volumeManager.create(CreateVolumeRequest.builder().volume(COMPILER_VOLUME).build()).getVolume();
-        File compileScriptSrc;
+    private CompilerVolume() {
         try {
-            compileScriptSrc = new File(CompilerVolume.class.getResource("/cpp/compile.sh").toURI());
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-        File compileScriptDest = new File(volume.getMountpoint() + "/cpp.sh");
-        try {
+            File compileScriptSrc = new File(CompilerVolume.class.getResource("/cpp/compile.sh").getPath());
+            File compileScriptDest = Paths.get(Constants.COMPILER_DIR, "cpp.sh").toFile();
             FileUtils.moveFile(compileScriptSrc, compileScriptDest);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.bindRequest = BindRequest.builder()
+                .path(Constants.COMPILER_DIR)
+                .destination(Constants.EXECUTOR_COMPILER_DIR)
+                .ro(true)
+                .build();
     }
 
     @Override
-    public Volume get() {
-        return volume;
+    public BindRequest get() {
+        return bindRequest;
     }
 
 }

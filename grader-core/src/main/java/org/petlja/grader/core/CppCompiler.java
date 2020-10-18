@@ -8,10 +8,7 @@ import java.util.logging.Logger;
 import org.petlja.grader.docker.Container;
 import org.petlja.grader.docker.ContainerManager;
 import org.petlja.grader.docker.DestroyContainerRequest;
-import org.petlja.grader.docker.DestroyVolumeRequest;
 import org.petlja.grader.docker.LaunchContainerRequest;
-import org.petlja.grader.docker.MountVolumeRequest;
-import org.petlja.grader.docker.VolumeManager;
 import org.petlja.grader.executor.ExecutorConfiguration;
 import org.petlja.grader.executor.ExecutorProcess;
 import org.petlja.grader.executor.ProcessCommand;
@@ -23,49 +20,34 @@ public final class CppCompiler implements Compiler {
     private static final ExecutorConfiguration EXECUTOR_CONFIGURATION = ExecutorConfiguration.builder()
             .processes(ExecutorProcess.builder()
                     .commands(ProcessCommand.of("bash"))
-                    .commands(ProcessCommand.of("/app/compiler/cpp.sh"))
-                    .commands(ProcessCommand.of("/app/executor/source"))
-                    .commands(ProcessCommand.of("/app/executor/output"))
-                    .commands(ProcessCommand.of("/app/executor/error"))
-                    .commands(ProcessCommand.of("/app/executor/time"))
+                    .commands(ProcessCommand.of(Constants.EXECUTOR_COMPILER_DIR + "/cpp.sh"))
+                    .commands(ProcessCommand.of(Constants.EXECUTOR_DIR + "/source"))
+                    .commands(ProcessCommand.of(Constants.EXECUTOR_DIR + "/output"))
+                    .commands(ProcessCommand.of(Constants.EXECUTOR_DIR + "/error"))
+                    .commands(ProcessCommand.of(Constants.EXECUTOR_DIR + "/time"))
                     .build())
             .build();
 
-    private final VolumeManager volumeManager;
     private final ContainerManager containerManager;
+    private final ExecutorOutputParser executorOutputParser;
 
-    public CppCompiler(VolumeManager volumeManager, ContainerManager containerManager) {
-        this.volumeManager = volumeManager;
+    public CppCompiler(ContainerManager containerManager, ExecutorOutputParser executorOutputParser) {
         this.containerManager = containerManager;
+        this.executorOutputParser = executorOutputParser;
     }
 
     @Override
     public CompileResponse compile(CompileRequest request) {
-        CompilerVolume compilerVolume = CompilerVolume.create(volumeManager);
+        CompilerVolume compilerVolume = CompilerVolume.create();
         UserCodeVolume userCodeVolume = new UserCodeVolume(
-                volumeManager, request.getId(), request.getSource(), EXECUTOR_CONFIGURATION);
+                request.getId(), request.getSource(), EXECUTOR_CONFIGURATION);
         Container executor = containerManager.launch(
                 LaunchContainerRequest.builder()
                         .image(EXECUTOR_IMAGE_ID)
-                        .volumes(MountVolumeRequest.builder()
-                                .volume(compilerVolume.get().getId())
-                                .destination("/app/compiler")
-                                .ro(true)
-                                .build())
-                        .volumes(MountVolumeRequest.builder()
-                                .volume(userCodeVolume.get().getId())
-                                .destination("/app/executor")
-                                .ro(false)
-                                .build())
+                        .binds(compilerVolume.get())
+                        .binds(userCodeVolume.get())
                         .build()).getContainer();
-        CompileResponse response = parseExecutor(userCodeVolume);
         containerManager.destroy(DestroyContainerRequest.builder().container(executor.getId()).build());
-        volumeManager.destroy(DestroyVolumeRequest.builder().volume(userCodeVolume.get().getId()).build());
-        return response;
-    }
-
-    private CompileResponse parseExecutor(UserCodeVolume userCodeVolume) {
-        // TODO(mbakovic): get output error and time
-        return null;
+        return executorOutputParser.parse(userCodeVolume.userCodeDirectory());
     }
 }
