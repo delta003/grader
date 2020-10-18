@@ -39,3 +39,6 @@ out/
 generated_src/
 generated_testSrc/
 generated/
+
+# Workdir
+workdir/
